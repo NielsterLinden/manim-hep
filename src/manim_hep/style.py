@@ -16,6 +16,7 @@ from ``C``, never from literals.
 from __future__ import annotations
 
 import dataclasses
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -74,23 +75,58 @@ class Theme:
         return np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.0])
 
 
-def _register(font_file: Path) -> bool:
+def _load_and_unlist_on_windows() -> None:
+    """Work around a slow path in ManimPango on Windows.
+
+    ManimPango re-adds every registered font file to Pango's font map on every
+    text render, which costs about a second per file per ``Text``. One warm-up
+    render loads the files into the process-wide font map, where they stay; then
+    they are taken off ManimPango's re-add list. The font list Manim checks
+    names against is cached first, while the fonts are still listed.
+    """
+    import tempfile
+
     import manimpango
 
-    key = str(font_file.resolve())
-    if key in _registered:
-        return True
-    if manimpango.register_font(key):
-        _registered.add(key)
-        return True
-    return False
+    with tempfile.TemporaryDirectory() as tmp:
+        setting = manimpango.TextSetting(0, 1, _FALLBACK_FONT, "NORMAL", "NORMAL")
+        manimpango.text2svg([setting], 10, 0, True, str(Path(tmp) / "w.svg"), 0, 0, 50, 50, "x")
+    Text.font_list.cache_clear()
+    Text.font_list()
+    MarkupText.font_list.cache_clear()
+    MarkupText.font_list()
+    for font in list(manimpango.registered_fonts):
+        if str(Path(font.path).resolve()) in _registered:
+            manimpango.registered_fonts.discard(font)
+
+
+def _register(files: list[Path]) -> bool:
+    """Register font files with Pango once per process; True if all are available."""
+    import manimpango
+
+    new = [str(f.resolve()) for f in files if str(f.resolve()) not in _registered]
+    ok = all(str(f.resolve()) in _registered for f in files if str(f.resolve()) not in new)
+    for key in new:
+        if manimpango.register_font(key):
+            _registered.add(key)
+        else:
+            ok = False
+    if new:
+        if sys.platform == "win32":
+            _load_and_unlist_on_windows()
+        else:
+            Text.font_list.cache_clear()
+            MarkupText.font_list.cache_clear()
+    return ok
 
 
 def _resolve_font(preset: Preset) -> str:
-    """Register the bundled DejaVu fonts, and mplhep's font for the preset if installed."""
-    for font_file in sorted(_FONT_DIR.glob("*.ttf")):
-        _register(font_file)
-    family = _FALLBACK_FONT
+    """Make the preset's font available and return its family name.
+
+    Experiment presets use mplhep's fonts when ``manim-hep[mplhep]`` is
+    installed (regular, bold, italic and bold italic faces only); everything
+    else uses the bundled DejaVu Sans.
+    """
     if preset.font_dir and preset.font != _FALLBACK_FONT:
         try:
             import mplhep_data
@@ -98,12 +134,11 @@ def _resolve_font(preset: Preset) -> str:
             pass
         else:
             folder = Path(mplhep_data.__file__).parent / "fonts" / preset.font_dir
-            files = sorted([*folder.glob("*.otf"), *folder.glob("*.ttf")])
-            if files and all(_register(f) for f in files):
-                family = preset.font
-    Text.font_list.cache_clear()
-    MarkupText.font_list.cache_clear()
-    return family
+            files = sorted(folder.glob(f"{preset.font_dir}-*.otf"))
+            if files and _register(files):
+                return preset.font
+    _register(sorted(_FONT_DIR.glob("*.ttf")))
+    return _FALLBACK_FONT
 
 
 def _apply(theme: Theme) -> None:
