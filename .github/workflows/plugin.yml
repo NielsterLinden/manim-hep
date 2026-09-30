@@ -1,0 +1,24 @@
+name: Plugin
+
+on:
+  push:
+    branches: [main]
+    paths: ["plugin/**", ".claude-plugin/**", ".github/workflows/plugin.yml"]
+  pull_request:
+    paths: ["plugin/**", ".claude-plugin/**", ".github/workflows/plugin.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      # Validation is local and offline: no API key is needed.
+      - run: npm install -g @anthropic-ai/claude-code
+      - run: claude plugin validate --strict plugin
+      - run: claude plugin validate --strict .
