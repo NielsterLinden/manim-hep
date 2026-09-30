@@ -17,7 +17,6 @@ import numpy as np
 from manim import (
     DOWN,
     LEFT,
-    UL,
     AnimationGroup,
     Create,
     FadeIn,
@@ -89,9 +88,7 @@ def final_state() -> dict:
     stack = stack_hist(axes, EDGES, [("background", BACKGROUND), ("Z", SIGNAL)])
     stack.set_z_index(-1)  # the frame and ticks stay on top of the filled histogram
     data = errorbars(axes, CENTRES, DATA, yerr=np.sqrt(DATA))
-    # Built at twice the size and scaled about its anchored corner (see crisp_text).
-    lab = label("atlas", status="Work in Progress", sqrt_s=13.6, lumi=50, target=axes, font_size=48)
-    lab.scale(0.5, about_point=lab.get_corner(UL))
+    lab = label("atlas", status="Work in Progress", sqrt_s=13.6, lumi=50, target=axes)
     note = crisp_text("Synthetic data", axes.y_labels[0].font_size * 0.8, C.muted)
     note.next_to(lab, DOWN, aligned_edge=LEFT, buff=0.12)
     return {"stack": stack, "axes": axes, "data": data, "label": lab, "note": note}

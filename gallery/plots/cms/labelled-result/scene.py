@@ -15,9 +15,7 @@ import itertools
 
 import numpy as np
 from manim import (
-    DL,
     DOWN,
-    DR,
     RIGHT,
     UL,
     AnimationGroup,
@@ -92,18 +90,7 @@ def final_state() -> dict:
     stack.set_z_index(-1)  # the frame and ticks stay on top of the filled histogram
     data = errorbars(axes, CENTRES, DATA, yerr=np.sqrt(DATA))
     # CMS style: "CMS" and the status above the frame on the left, lumi (√s) on the right.
-    # Built at twice the size; each part is scaled about its anchored corner.
-    lab = label(
-        "cms",
-        status="Private work",
-        sqrt_s=13.6,
-        lumi=50,
-        loc="above",
-        target=axes,
-        font_size=48,
-    )
-    lab.main.scale(0.5, about_point=lab.main.get_corner(DL))
-    lab.info.scale(0.5, about_point=lab.info.get_corner(DR))
+    lab = label("cms", status="Private work", sqrt_s=13.6, lumi=50, loc="above", target=axes)
     note = crisp_text("Synthetic data", axes.y_labels[0].font_size * 0.8, C.muted)
     note.move_to(axes.frame.get_corner(UL) + 0.2 * (RIGHT + DOWN), aligned_edge=UL)
     return {"stack": stack, "axes": axes, "data": data, "label": lab, "note": note}
