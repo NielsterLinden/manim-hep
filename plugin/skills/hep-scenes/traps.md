@@ -67,3 +67,12 @@ still apply to 0.21 as far as we know.
     `interpolate(0)` when it cleans up, so the child becomes visible again. Fade out
     top-level objects only. Change group members in place (`.animate`,
     `save_state`/`Restore`) or remove them from the group first.
+27. **Within one `play()`, `TransformFromCopy` adds its target before `FadeIn` adds
+    theirs.** The builder dict must list objects in the order the scene ends up with them,
+    or `check_order` fails. Read its message: it names both orders.
+28. **A `MathTex` label with a descender (such as "μ =") next to a `DecimalNumber` sets the
+    digits too low.** Align the number to a reference `MathTex` (for example
+    `MathTex(r"\mu = 0")`) instead of to the label's bounding box.
+29. **`always_redraw` and updaters versus `check_order`.** Before the final check, swap
+    `always_redraw` parts for identical static objects (or use `become` inside an updater
+    on a fixed object), so the state dict holds the objects the scene really shows.

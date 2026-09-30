@@ -44,6 +44,7 @@ def _is_placeholder(mob: Mobject) -> bool:
 def check_order(scene: Scene, expected: State | Sequence[Mobject]) -> None:
     """Assert that ``scene`` shows exactly ``expected``, in that drawing order.
 
+    Both sides are compared in drawing order: add order, re-sorted by ``z_index``.
     Wait placeholders and ``ValueTracker``s are ignored. On a mismatch this raises
     ``AssertionError`` naming what was found, so Manim stops before writing a
     misleading clip.
@@ -55,7 +56,9 @@ def check_order(scene: Scene, expected: State | Sequence[Mobject]) -> None:
     else:
         want = list(expected)
     live = [m for m in scene.mobjects if not _is_placeholder(m) and not isinstance(m, ValueTracker)]
-    live.sort(key=lambda m: m.z_index)  # stable: the order Manim draws them in
+    # Manim draws in add order, stably re-sorted by z_index; compare both sides that way.
+    live.sort(key=lambda m: m.z_index)
+    want.sort(key=lambda m: m.z_index)
     if len(live) == len(want) and all(a is b for a, b in zip(live, want, strict=True)):
         return
 

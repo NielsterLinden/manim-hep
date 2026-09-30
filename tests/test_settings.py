@@ -77,5 +77,8 @@ def test_invalid_values_are_explained(tmp_path: Path, toml, message):
 def test_unknown_keys_warn(tmp_path: Path):
     path = tmp_path / "manim-hep.toml"
     path.write_text('[agent]\nverfy = "none"\n[extra]\nx = 1\n', encoding="utf-8")
-    with pytest.warns(UserWarning, match="unknown key agent.verfy"):
+    with pytest.warns(UserWarning) as record:
         load_settings(path)
+    messages = [str(w.message) for w in record]
+    assert any("unknown key agent.verfy" in m for m in messages)
+    assert any("unknown section [extra]" in m for m in messages)

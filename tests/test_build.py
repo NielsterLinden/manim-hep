@@ -56,6 +56,13 @@ def test_check_order_uses_z_index():
     check_order(scene, state)
 
 
+def test_check_order_sorts_the_expected_state_by_z_index_too():
+    scene = Scene()
+    state = {"a": Square(), "top": Circle().set_z_index(1), "c": Dot()}
+    add_state(scene, state)
+    check_order(scene, state)  # drawn as a, c, top
+
+
 def test_place_point_and_scaled_placement():
     sq = place(Square(1), (2, 1))
     assert np.allclose(sq.get_center(), [2, 1, 0])
