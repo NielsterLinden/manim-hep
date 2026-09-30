@@ -82,3 +82,13 @@ def test_intrusions(tmp_path: Path, monkeypatch):
     assert intrusions(Square(1).move_to([-6.2, 1.0, 0]), theme) == ["keep-out 1"]
     assert theme.content_box[3] == TITLE_BAND_Y
     assert theme.content_center[1] == pytest.approx((-4 + TITLE_BAND_Y) / 2)
+
+
+def test_highlight_shapes_follow_the_theme():
+    from manim import Cross, SurroundingRectangle
+
+    theme = use_theme("generic")
+    box = SurroundingRectangle(Square(1))
+    assert box.get_color().to_hex().upper() == theme.palette.highlight
+    cross = Cross(Square(1))
+    assert cross[0].get_stroke_color().to_hex().upper() == theme.palette.highlight

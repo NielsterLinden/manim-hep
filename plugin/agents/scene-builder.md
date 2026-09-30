@@ -26,7 +26,8 @@ return questions in your report.
    - The storyline (beats, on-screen whitelist, numbers, final-frame checklist, chaining).
    - `manim-hep.toml`.
    - The `hep-scenes` skill and its `api.md` and `traps.md`.
-   - Look in the manim-hep gallery for the closest example and start from its structure.
+   - Start from the structure of the closest example in the manim-hep gallery:
+     https://github.com/NielsterLinden/manim-hep/tree/main/gallery
 2. **Write the scene.**
    - `use_theme()` at module level, colours from `theme.palette` roles, one anchor dict,
      and a seeded RNG.

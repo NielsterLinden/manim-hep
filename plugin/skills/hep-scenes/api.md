@@ -1,4 +1,7 @@
-# manim-hep 0.1 API (import from `manim_hep` or the submodule)
+# manim-hep 0.1 API
+
+Every name below can be imported from `manim_hep` (e.g. `from manim_hep import DataAxes,
+tint, fermion`) or from its submodule (`from manim_hep.palette import OKABE_ITO`).
 
 This page documents the same release as the installed package. When in doubt, read the
 docstring: `python -c "import manim_hep.plots as m; help(m.DataAxes)"`.
@@ -94,12 +97,14 @@ docstring: `python -c "import manim_hep.plots as m; help(m.DataAxes)"`.
   - The result has `.layer[name]`, `.names`, `.counts`, `.cum` and `.total`, and keeps a
     fixed point count, so `Transform` works between two stacks.
 - `errorbars(axes, x, y, yerr, *, xerr=None, color=None, radius=0.05)`, capless.
-  - `yerr` is a scalar, one value per point, or `(low, high)`.
+  - `yerr` follows matplotlib: a scalar, one value per point, or a `(2, n)` array of
+    (low, high).
   - Each point is `VGroup(dot, bar[, xbar])`.
 - `band(axes, x, low, high, *, color=None, opacity=0.25, step=False)`. With `step=True`,
   `x` are bin edges.
 - `ratio_panel(main, edges, num, den, *, y_range=(0.5, 1.5), y_length=1.2, y_ticks=None, num_err=None, gap=0.12, y_title="Data / Pred.", x_title=None, color=None)`
   - It sits under `main` and lines up with it. Build `main` with `show_x_labels=False`.
+  - Points outside `y_range` become triangles on the panel edge, pointing towards them.
   - The result has `.axes`, `.ref`, `.dots`, `.errs`, `.ratio` and `.bins`.
 
 ## Detector: `manim_hep.detector`
@@ -120,7 +125,7 @@ docstring: `python -c "import manim_hep.plots as m; help(m.DataAxes)"`.
 ## Command line
 
 - `manim-hep doctor [--no-tex]`
-- `manim-hep init [--root DIR] [--agent claude|codex|both|none] [--experiment X]`
+- `manim-hep init [--root DIR] [--agent claude|codex|both|none] [--experiment X] [--update-skills]`
 - `manim-hep render FILE SCENE [--final] [--frames 1.5,3] [--slug S]`
 - `manim-hep lint [PATHS]`
 - `manim-hep seam A.mp4 B.mp4`

@@ -34,6 +34,7 @@ from manim import (
     Polygon,
     Rectangle,
     Text,
+    Triangle,
     VGroup,
     VMobject,
 )
@@ -56,6 +57,15 @@ def _digit_font_size(height: float) -> float:
 def _minus(text: str) -> str:
     """Typeset negative numbers with a true minus sign (U+2212), not a hyphen."""
     return text.replace("-", "−")
+
+
+def _format_tick(value: float, fmt: str) -> str:
+    """A tick label: no "-0", whole numbers without exponents, a true minus sign."""
+    value = round(float(value), 12) + 0.0  # drops float drift and turns -0.0 into 0.0
+    text = fmt.format(value)
+    if fmt == "{:g}" and "e" in text and value.is_integer():
+        text = str(int(value))
+    return _minus(text)
 
 
 def _nice_ticks(lo: float, hi: float, target: int = 6) -> list[float]:
@@ -86,6 +96,9 @@ def _title(text: str | Mobject, font_size: float, color) -> Mobject:
 class DataAxes(VGroup):
     """A plot frame with inward ticks on all sides and labels in the theme font.
 
+    ``c2p(x, y)`` converts data to scene coordinates at any time, even after the
+    axes were moved; ``frame`` is the plot area.
+
     Parameters
     ----------
     x_range, y_range
@@ -102,9 +115,6 @@ class DataAxes(VGroup):
         range) are drawn at the floor, so empty bins sit on the axis.
     show_x_labels, show_y_labels
         Hide tick labels, e.g. on a main panel above a ratio panel.
-
-    ``c2p(x, y)`` converts data to scene coordinates at any time, even after the
-    axes were moved; ``frame`` is the plot area.
     """
 
     def __init__(
@@ -140,6 +150,8 @@ class DataAxes(VGroup):
         if log_y and self.y_min <= 0:
             raise ValueError("a log y axis needs a positive lower limit")
         self.log_y = log_y
+        if log_y and y_floor is not None and y_floor <= 0:
+            raise ValueError("y_floor must be positive on a log y axis")
         self.y_floor = float(y_floor) if y_floor is not None else (self.y_min if log_y else None)
         self.x_fmt, self.y_fmt, self.tick_height = x_fmt, y_fmt, tick_height
         self.tick_length, self.stroke_width = tick_length, stroke_width
@@ -174,7 +186,7 @@ class DataAxes(VGroup):
         self.x_labels, self.y_labels = VGroup(), VGroup()
         if show_x_labels:
             for x in self.x_ticks:
-                lab = _sized_text(Text, _minus(x_fmt.format(x)), size, color=self.color_)
+                lab = _sized_text(Text, _format_tick(x, x_fmt), size, color=self.color_)
                 lab.next_to(self.c2p(x, self.y_min), DOWN, buff=0.14)
                 self.x_labels.add(lab)
         if show_y_labels:
@@ -190,7 +202,7 @@ class DataAxes(VGroup):
                         MarkupText, f"10<sup>{_minus(text)}</sup>", size, color=self.color_
                     )
                 else:
-                    lab = _sized_text(Text, _minus(y_fmt.format(y)), size, color=self.color_)
+                    lab = _sized_text(Text, _format_tick(y, y_fmt), size, color=self.color_)
                 lab.next_to(self.c2p(self.x_min, y), LEFT, buff=0.14)
                 self.y_labels.add(lab)
         self.add(self.x_labels, self.y_labels)
@@ -370,11 +382,18 @@ def stack_hist(
 
 
 def _errors(err, n: int) -> tuple[np.ndarray, np.ndarray]:
-    if isinstance(err, tuple) and len(err) == 2:
-        lo, hi = (np.broadcast_to(np.asarray(e, dtype=float), (n,)) for e in err)
-        return lo, hi
-    sym = np.broadcast_to(np.asarray(err, dtype=float), (n,))
-    return sym, sym
+    """Errors as matplotlib takes them: one number, ``n`` values, or ``(2, n)`` = (low, high)."""
+    arr = np.asarray(err, dtype=float)
+    if arr.ndim == 0:
+        return np.full(n, float(arr)), np.full(n, float(arr))
+    if arr.shape == (n,):
+        return arr, arr
+    if arr.shape == (2, n):
+        return arr[0], arr[1]
+    raise ValueError(
+        f"errors must be one number, {n} values, or a (2, {n}) array of (low, high); "
+        f"got shape {arr.shape}"
+    )
 
 
 def errorbars(
@@ -390,9 +409,9 @@ def errorbars(
 ) -> VGroup:
     """Data points with error bars, without caps (the HEP convention).
 
-    ``yerr`` (and ``xerr``) is one value, one per point, or a ``(low, high)``
-    tuple for asymmetric errors. The result holds one ``VGroup(dot, bar[, xbar])``
-    per point, so ``Transform`` works point by point.
+    ``yerr`` (and ``xerr``) follow matplotlib: one value, one value per point, or a
+    ``(2, n)`` array of (low, high) for asymmetric errors. The result holds one
+    ``VGroup(dot, bar[, xbar])`` per point, so ``Transform`` works point by point.
     """
     x, y = np.asarray(x, dtype=float), np.asarray(y, dtype=float)
     if x.shape != y.shape:
@@ -505,16 +524,31 @@ def ratio_panel(
     centres = (edges[:-1] + edges[1:]) / 2
     color = color or current_theme().palette.data
     dots, errs, bins = VGroup(), VGroup(), []
+    lo, hi = float(y_range[0]), float(y_range[1])
     for i in np.flatnonzero(ok):
-        dots.add(Dot(axes.c2p(centres[i], ratio[i]), radius=0.04, color=color))
+        r = float(ratio[i])
+        if lo <= r <= hi:
+            dots.add(Dot(axes.c2p(centres[i], r), radius=0.04, color=color))
+        else:  # off the panel: a triangle on the edge, pointing towards the point
+            edge = axes.c2p(centres[i], hi if r > hi else lo)
+            tip = UP if r > hi else DOWN
+            dots.add(
+                Triangle(color=color, fill_color=color, fill_opacity=1, stroke_width=0)
+                .scale(0.07)
+                .rotate(0 if r > hi else np.pi)
+                .move_to(edge, aligned_edge=tip)  # the tip touches the panel edge
+            )
         if num_err is not None:
             e = float(num_err[i]) / den[i]
+            a, b = max(r - e, lo), min(r + e, hi)
+            if a >= b:  # entirely off the panel: an invisible bar keeps one bar per point
+                a = b = min(max(r, lo), hi)
             errs.add(
                 Line(
-                    axes.c2p(centres[i], ratio[i] - e),
-                    axes.c2p(centres[i], ratio[i] + e),
+                    axes.c2p(centres[i], a),
+                    axes.c2p(centres[i], b),
                     color=color,
-                    stroke_width=2.0,
+                    stroke_width=2.0 if a < b else 0.0,
                 )
             )
         bins.append(int(i))

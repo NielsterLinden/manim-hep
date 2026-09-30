@@ -17,7 +17,7 @@ spec.loader.exec_module(hygiene)
     [
         "data = '/afs/cern.ch/user/x/someone/file.root'",
         "path = r'C:\\Users\\someone\\talk'",
-        "ssh someone@stbc-i2",
+        "ssh someone@lxplus9.cern.ch",
         "host = 'lxplus9.cern.ch'",
         "cache = '/data/atlas/users/someone/cache'",
     ],

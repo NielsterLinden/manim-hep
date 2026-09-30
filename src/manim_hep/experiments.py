@@ -135,8 +135,11 @@ def label(
     doi
         Dataset DOI(s); required for ``cms-opendata`` and not used otherwise.
 
-    The result is a ``VGroup`` with ``.main``, ``.info`` and ``.note`` (or ``None``)
-    and ``.plain``, the label as plain text.
+    Returns
+    -------
+    VGroup
+        With ``.main``, ``.info`` and ``.note`` (``None`` when absent) and ``.plain``,
+        the label as plain text.
     """
     preset = get_preset(experiment)
     if preset.name == "generic":
@@ -189,6 +192,10 @@ def label(
         group.arrange(DOWN, aligned_edge=edge, buff=0.1)
         group.move_to(area.get_corner(UP + edge), aligned_edge=UP + edge)
         group.shift(DOWN * buff - edge * buff)
+    if target is None:  # no target: keep the label inside the content area
+        overshoot = group.get_top()[1] - (current_theme().content_box[3] - buff)
+        if overshoot > 0:
+            group.shift(DOWN * overshoot)
     group.main, group.info, group.note = main, info, note
     group.plain = "\n".join(plain)
     group.experiment, group.status = preset.name, status

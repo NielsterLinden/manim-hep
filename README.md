@@ -38,10 +38,10 @@ In the repository where you want to make animations, give your agent this senten
 
 ```python
 import numpy as np
-from manim import Create, FadeIn, Scene
+from manim import UL, Create, FadeIn, Scene, Text
 from manim_hep import DataAxes, check_order, errorbars, label, stack_hist, use_theme
 
-use_theme("cms")
+C = use_theme("cms").palette
 rng = np.random.default_rng(1)
 edges = np.arange(70.0, 111.0, 2.0)
 centres = (edges[:-1] + edges[1:]) / 2
@@ -54,16 +54,18 @@ class ZPeak(Scene):
     def construct(self):
         axes = DataAxes((70, 110), (0, 1600), x_title="m<sub>µµ</sub> [GeV]",
                         y_title="Events / 2 GeV").move_frame_to((0.3, -0.5))
+        note = Text("Synthetic data", font_size=48, color=C.muted).scale(0.4)
         state = {
             "stack": stack_hist(axes, edges, [("background", bkg), ("Z", sig)]).set_z_index(-1),
             "axes": axes,
             "data": errorbars(axes, centres, data, yerr=np.sqrt(data)),
             "label": label("cms", status="Private work", lumi=50, sqrt_s=13.6,
                            loc="above", target=axes),
+            "note": note.move_to(axes.frame.get_corner(UL) + [0.2, -0.2, 0], aligned_edge=UL),
         }
         self.play(FadeIn(axes))
         self.play(Create(state["stack"]), run_time=1.5)
-        self.play(FadeIn(state["data"]), FadeIn(state["label"]))
+        self.play(FadeIn(state["data"]), FadeIn(state["label"]), FadeIn(state["note"]))
         check_order(self, state)   # exactly these objects, in drawing order
         self.wait(0.1)             # clips end on their last change
 ```
@@ -72,7 +74,8 @@ Render it with `manim-hep render zpeak.py ZPeak`. It writes the clip and its fir
 frames, and checks that nothing is drawn in the slide's title band.
 
 There is **no default status**. `label()` makes you choose one of the experiment's public
-statuses; manim-hep never picks "Preliminary" for you.
+statuses; manim-hep never picks "Preliminary" for you. Synthetic data carry a visible
+note, so no frame can pass for a real result.
 
 ## What is inside
 

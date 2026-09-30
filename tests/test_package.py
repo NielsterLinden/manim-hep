@@ -32,3 +32,20 @@ def test_manim_import_loads_plugin_without_error():
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert out.returncode == 0, out.stderr
     assert "Missing Plugins" not in out.stdout + out.stderr
+
+
+def test_names_promised_by_the_api_sheet_are_exported():
+    for name in (
+        "fermion",
+        "photon",
+        "gluon",
+        "scalar",
+        "vertex",
+        "tint",
+        "shade",
+        "mix",
+        "FrozenDataError",
+        "TITLE_BAND_Y",
+        "Palette",
+    ):
+        assert getattr(manim_hep, name) is not None, name

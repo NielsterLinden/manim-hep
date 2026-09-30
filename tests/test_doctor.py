@@ -83,3 +83,9 @@ def test_settings_file_is_described(healthy, capsys, tmp_path: Path):
 
 def test_real_platform_detection_is_one_of_the_known():
     assert doctor.detect_platform() in doctor.LATEX_FIX
+
+
+def test_invalid_settings_are_a_failure_not_a_crash(healthy, capsys, tmp_path: Path):
+    (tmp_path / "manim-hep.toml").write_text('[agent]\nverify = "maybe"\n', encoding="utf-8")
+    assert main(["doctor"]) == 1
+    assert "[FAIL] settings" in capsys.readouterr().out

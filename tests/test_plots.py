@@ -4,7 +4,7 @@ import math
 
 import numpy as np
 import pytest
-from manim import DL, UR
+from manim import DL, UR, Triangle
 
 from manim_hep.plots import (
     DataAxes,
@@ -144,4 +144,35 @@ def test_ratio_panel_lines_up_and_skips_empty_bins():
     assert rp.bins == [0, 2, 3, 4, 5]
     assert math.isnan(rp.ratio[1]) and rp.ratio[3] == pytest.approx(2.0)
     assert len(rp.dots) == len(rp.errs) == 5
+    # bin 3 (ratio 2) is off the (0.5, 1.5) panel: an up-pointing marker on the top edge
+    assert isinstance(rp.dots[2], Triangle)
+    assert rp.dots[2].get_top()[1] == pytest.approx(rp.axes.frame.get_top()[1], abs=1e-6)
+    assert rp.errs[2].get_stroke_width() == 0
     assert rp.axes.y_ticks == [0.75, 1.0, 1.25]  # no labels on the shared edge
+
+
+def test_tick_labels_have_no_negative_zero_or_exponents():
+    ax = DataAxes(
+        (-0.3, 0.3),
+        (0, 1.2e6),
+        x_ticks=[-0.3, -0.1 - 0.2 + 0.3, 0.3],
+        y_ticks=[0, 800000, 1e6, 1.2e6],
+    )
+    assert [lab.text for lab in ax.x_labels] == ["\u22120.3", "0", "0.3"]
+    assert [lab.text for lab in ax.y_labels] == ["0", "800000", "1000000", "1200000"]
+
+
+def test_errors_follow_the_matplotlib_shapes(axes):
+    two = errorbars(axes, [70, 80], [100, 200], yerr=(10.0, 30.0))  # two symmetric errors
+    assert two[0][1].get_length() == pytest.approx(
+        (axes.c2p(0, 110)[1] - axes.c2p(0, 90)[1]), rel=1e-6
+    )
+    asym = errorbars(axes, [70, 80], [100, 200], yerr=[[5, 5], [20, 20]])  # (2, n)
+    assert asym[1][1].get_end()[1] == pytest.approx(axes.c2p(0, 220)[1])
+    with pytest.raises(ValueError, match=r"\(2, 2\) array"):
+        errorbars(axes, [70, 80], [100, 200], yerr=[1, 2, 3])
+
+
+def test_log_floor_must_be_positive():
+    with pytest.raises(ValueError, match="y_floor must be positive"):
+        DataAxes((0, 1), (0.1, 10), log_y=True, y_floor=0)

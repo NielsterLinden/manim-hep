@@ -82,3 +82,20 @@ def test_unknown_keys_warn(tmp_path: Path):
     messages = [str(w.message) for w in record]
     assert any("unknown key agent.verfy" in m for m in messages)
     assert any("unknown section [extra]" in m for m in messages)
+
+
+@pytest.mark.parametrize(
+    ("toml", "message"),
+    [
+        ("[style]\nkeep_out = [-7.1, 0.2, -5.85, 4.0]", "each keep_out entry"),
+        ('[style]\nkeep_out = "top-left"', "keep_out is a list"),
+        ('paths = "x"', r"\[paths\] must be a table"),
+        ("[style]\ntitle_band = nan", "title_band must be a number"),
+        ("[style]\nkeep_out = [[true, 0, 1, 1]]", "each keep_out entry"),
+    ],
+)
+def test_wrong_shapes_are_explained(tmp_path: Path, toml, message):
+    path = tmp_path / "manim-hep.toml"
+    path.write_text(toml, encoding="utf-8")
+    with pytest.raises(ValueError, match=message):
+        load_settings(path)

@@ -55,7 +55,12 @@ def check_order(scene: Scene, expected: State | Sequence[Mobject]) -> None:
         want = list(expected.values())
     else:
         want = list(expected)
-    live = [m for m in scene.mobjects if not _is_placeholder(m) and not isinstance(m, ValueTracker)]
+
+    def drawable(m: Mobject) -> bool:
+        return not _is_placeholder(m) and not isinstance(m, ValueTracker)
+
+    live = [m for m in scene.mobjects if drawable(m)]
+    want = [m for m in want if drawable(m)]
     # Manim draws in add order, stably re-sorted by z_index; compare both sides that way.
     live.sort(key=lambda m: m.z_index)
     want.sort(key=lambda m: m.z_index)

@@ -191,9 +191,18 @@ class FeynmanDiagram(VGroup):
         with more room, away from the other edges (so legs meeting in a "<" keep
         their labels outside the wedge); on a tie, above or to the left.
 
-    Attributes: ``lines``, ``dots`` and ``labels`` (``VGroup``s, in edge order;
-    ``labels`` holds ``None``-free entries only), ``points`` (name → position),
-    and ``edge_labels`` (one entry per edge, ``None`` where there is no label).
+    Attributes
+    ----------
+    lines : VGroup
+        The drawn edges, in edge order.
+    dots : VGroup
+        One dot per internal vertex.
+    labels : VGroup
+        The edge labels that exist, in edge order.
+    edge_labels : list
+        One entry per edge: its label, or ``None``.
+    points_by_name : dict
+        Vertex name → scene position.
     """
 
     def __init__(

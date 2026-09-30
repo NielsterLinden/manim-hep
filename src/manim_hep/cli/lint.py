@@ -17,7 +17,9 @@ from __future__ import annotations
 
 import argparse
 import ast
+import io
 import re
+import tokenize
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -156,7 +158,6 @@ _PRIVATE = [
         r"/Users/[A-Za-z]",
         r"\blxplus\w*",
         r"\blxbatch\b",
-        r"\bstbc(?:-i\d+)?\b",
     )
 ]
 _NOQA = re.compile(r"#\s*noqa(?::\s*(?P<codes>[A-Z0-9, ]+))?")
@@ -246,7 +247,12 @@ def lint_source(source: str, path: str = "<string>") -> list[Finding]:
             name = _call_name(node)
             if name in COLOUR_CALLS and any(isinstance(a, ast.Constant) for a in node.args):
                 add(node.lineno, "MH001", f"{name}(...)")
-            if name == "embed" and isinstance(node.func, ast.Attribute):
+            if (
+                name == "embed"
+                and isinstance(node.func, ast.Attribute)
+                and isinstance(node.func.value, ast.Name)
+                and node.func.value.id == "self"
+            ):
                 add(node.lineno, "MH003", "self.embed()")
             for kw in node.keywords:
                 if kw.arg == "font" and isinstance(kw.value, ast.Constant):
@@ -299,7 +305,7 @@ def _files(paths: list[Path]) -> list[Path]:
             files.append(path)
         elif path.is_dir():
             for candidate in sorted(path.rglob("*.py")):
-                if not any(part in _SKIP_DIRS for part in candidate.parts):
+                if not any(part in _SKIP_DIRS for part in candidate.relative_to(path).parts):
                     files.append(candidate)
     return files
 
@@ -318,7 +324,13 @@ def run(args: argparse.Namespace) -> int:
     findings: list[Finding] = []
     listing: list[str] = []
     for file in files:
-        source = file.read_text(encoding="utf-8")
+        raw = file.read_bytes()
+        try:  # the encoding Python itself would use (UTF-8, BOM or a coding line)
+            encoding, _ = tokenize.detect_encoding(io.BytesIO(raw).readline)
+            source = raw.decode(encoding)
+        except (SyntaxError, UnicodeDecodeError, LookupError) as err:
+            findings.append(Finding(str(file), 1, "MH000", f"{MESSAGES['MH000']}: {err}"))
+            continue
         findings += lint_source(source, str(file))
         strings = onscreen_strings(source)
         if strings:

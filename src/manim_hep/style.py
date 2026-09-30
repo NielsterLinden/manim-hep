@@ -25,11 +25,13 @@ from manim import (
     AnnularSector,
     Annulus,
     Circle,
+    Cross,
     Dot,
     MarkupText,
     Mobject,
     Polygram,
     Rectangle,
+    SurroundingRectangle,
     Text,
     VMobject,
     config,
@@ -52,6 +54,7 @@ _COLOURED_CLASSES = (VMobject, Circle, Dot, Annulus, AnnularSector, Polygram, Re
 _TEXT_CLASSES = (Text, MarkupText)
 
 _registered: set[str] = set()
+_unlisted: list = []  # our fonts, loaded into Pango and taken off ManimPango's re-add list
 _active: Theme | None = None
 
 
@@ -107,6 +110,7 @@ def _load_and_unlist_on_windows() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         setting = manimpango.TextSetting(0, 1, _FALLBACK_FONT, "NORMAL", "NORMAL")
         manimpango.text2svg([setting], 10, 0, True, str(Path(tmp) / "w.svg"), 0, 0, 50, 50, "x")
+    manimpango.registered_fonts.update(_unlisted)  # so the font list names every family
     Text.font_list.cache_clear()
     Text.font_list()
     MarkupText.font_list.cache_clear()
@@ -114,6 +118,8 @@ def _load_and_unlist_on_windows() -> None:
     for font in list(manimpango.registered_fonts):
         if str(Path(font.path).resolve()) in _registered:
             manimpango.registered_fonts.discard(font)
+            if font not in _unlisted:
+                _unlisted.append(font)
 
 
 def _register(files: list[Path]) -> bool:
@@ -165,6 +171,11 @@ def _apply(theme: Theme) -> None:
     for cls in _TEXT_CLASSES:
         cls.set_default()
         cls.set_default(font=theme.font)
+    # Manim's highlight shapes default to yellow and red, which vanish or clash on white.
+    SurroundingRectangle.set_default()
+    SurroundingRectangle.set_default(color=theme.palette.highlight)
+    Cross.set_default()
+    Cross.set_default(stroke_color=theme.palette.highlight)
 
 
 def _search_start() -> Path:

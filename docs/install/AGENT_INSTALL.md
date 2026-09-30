@@ -67,6 +67,9 @@ manim-hep init --root <paths.root> --agent <claude|codex|both|none> --experiment
 - **Conflicts.** If `init` exits with 1, it wrote `<file>.manim-hep.new` files for what it
   could not merge. Show each one next to the original and merge by hand with the user.
   Delete the `.new` file afterwards.
+- **Skill copies.** If the only `.new` files are skills in `.agents/skills/`, they are
+  newer versions of manim-hep's own files. With the user's OK, run
+  `manim-hep init --agent codex --update-skills` to replace them.
 
 **Gate:**
 1. `init` exits 0, and there are no `.manim-hep.new` files left.

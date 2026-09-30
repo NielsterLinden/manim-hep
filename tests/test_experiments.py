@@ -141,3 +141,9 @@ def test_logo_loads_svg_and_png(tmp_path: Path):
     p = logo(png, height=0.5)
     assert isinstance(s, SVGMobject) and s.height == pytest.approx(1.0)
     assert isinstance(p, ImageMobject) and p.height == pytest.approx(0.5)
+
+
+def test_default_target_labels_stay_out_of_the_title_band():
+    for loc in ("upper left", "upper right", "above"):
+        lab = label("cms", status="Private work", lumi=138, sqrt_s=13, loc=loc)
+        assert intrusions(lab) == [], loc

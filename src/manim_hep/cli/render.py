@@ -14,6 +14,8 @@
 from __future__ import annotations
 
 import argparse
+import ast
+import errno
 import os
 import re
 import shutil
@@ -35,9 +37,17 @@ def kebab(name: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", spaced.lower()).strip("-")
 
 
+_BUSY = {errno.EAGAIN, errno.EACCES, getattr(errno, "EWOULDBLOCK", errno.EAGAIN)}
+_BUSY.add(getattr(errno, "EDEADLK", 36))  # what msvcrt raises when another process holds it
+
+
 @contextmanager
 def render_lock(path: Path, timeout: float = 3600.0):
-    """An exclusive lock on ``path`` that works on Windows, macOS and Linux."""
+    """An exclusive lock on ``path`` that works on Windows, macOS and Linux.
+
+    On a file system without locking (some cluster file systems) it warns and
+    carries on unlocked instead of waiting.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "a+b") as handle:
         start, told = time.monotonic(), False
@@ -53,7 +63,15 @@ def render_lock(path: Path, timeout: float = 3600.0):
 
                     fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
                 break
-            except OSError:
+            except OSError as err:
+                if err.errno not in _BUSY:
+                    print(
+                        f"warning: cannot lock {path} ({err.strerror}); renders here are "
+                        "not serialised, so do not start two at once",
+                        flush=True,
+                    )
+                    yield
+                    return
                 if not told:
                     print("waiting for another manim-hep render to finish ...", flush=True)
                     told = True
@@ -72,6 +90,44 @@ def render_lock(path: Path, timeout: float = 3600.0):
                 import fcntl
 
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
+def scene_names(file: Path) -> set[str]:
+    """Classes defined in ``file``, plus names it imports (a scene may live elsewhere)."""
+    try:
+        tree = ast.parse(file.read_bytes())
+    except (SyntaxError, ValueError):
+        return set()  # let Manim report the syntax error with its own message
+    names = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
+    for node in tree.body:
+        if isinstance(node, ast.ImportFrom):
+            names |= {alias.asname or alias.name for alias in node.names}
+    return names
+
+
+def delivery_root(root_dir: Path) -> Path:
+    """``root_dir``, or its twin in the main checkout when rendering in a git worktree.
+
+    Worktrees are temporary: clips delivered inside one would be lost with it.
+    """
+
+    def git(*args: str) -> str:
+        out = subprocess.run(["git", *args], cwd=root_dir, capture_output=True, text=True)
+        return out.stdout.strip() if out.returncode == 0 else ""
+
+    top = git("rev-parse", "--show-toplevel")
+    common = git("rev-parse", "--path-format=absolute", "--git-common-dir")
+    if not top or not common or Path(common).name != ".git":
+        return root_dir
+    main, here = Path(common).parent.resolve(), Path(top).resolve()
+    if main == here:
+        return root_dir
+    try:
+        twin = main / root_dir.resolve().relative_to(here)
+    except ValueError:
+        return root_dir
+    print(f"note: worktree detected; delivering to the main checkout: {twin}")
+    return twin
 
 
 def next_version(folder: Path, slug: str) -> int:
@@ -95,6 +151,11 @@ def run(args: argparse.Namespace) -> int:
     if not file.is_file():
         print(f"error: {args.file} not found")
         return 2
+    available = scene_names(file)
+    if args.scene not in available:
+        known = ", ".join(sorted(available)) or "none found"
+        print(f"error: no scene {args.scene!r} in {file.name} (scenes: {known})")
+        return 2
     settings = load_settings(search_from=file)
     project = settings.project_dir or Path.cwd().resolve()
     slug = args.slug or kebab(args.scene)
@@ -116,7 +177,13 @@ def run(args: argparse.Namespace) -> int:
         started = time.time()
         print(f"rendering {args.scene} from {file.name} ({'1080p60' if args.final else '480p15'})")
         proc = subprocess.run(
-            cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", env=env
+            cmd,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            env=env,
+            stdin=subprocess.DEVNULL,  # Manim may prompt for a scene; never wait on the terminal
         )
         log = work / "render.log"
         log.write_text(proc.stdout + proc.stderr, encoding="utf-8")
@@ -155,7 +222,7 @@ def run(args: argparse.Namespace) -> int:
         print("safe areas: clear")
 
     if args.final:
-        clips = settings.root_dir / "clips"
+        clips = delivery_root(settings.root_dir) / "clips"
         clips.mkdir(parents=True, exist_ok=True)
         version = next_version(clips, slug)
         delivered = clips / f"{slug}_v{version}.mp4"

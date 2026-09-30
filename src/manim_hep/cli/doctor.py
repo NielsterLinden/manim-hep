@@ -176,10 +176,17 @@ def check_write(project: Path) -> Check:
 def run_checks(platform: str, tex: bool = True) -> list[Check]:
     settings_file = find_settings()
     project = settings_file.parent if settings_file else Path.cwd()
+    settings_error = None
+    if settings_file:
+        try:
+            s = load_settings(settings_file)
+        except (ValueError, OSError) as err:  # includes TOML syntax errors
+            settings_error = str(err)
     checks = [check_python(), check_manim(), *check_latex(platform, tex), check_fonts()]
     checks.append(check_write(project))
-    if settings_file:
-        s = load_settings(settings_file)
+    if settings_error:
+        checks.append(Check("settings", False, settings_error, "fix manim-hep.toml"))
+    elif settings_file:
         detail = f"{settings_file} (experiment {s.experiment}, root {s.root})"
         checks.append(Check("settings", True, detail, counts=False))
     else:

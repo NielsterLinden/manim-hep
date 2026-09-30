@@ -68,10 +68,14 @@ class BarrelSlice(VGroup):
     center
         Where the beam line (the interaction point) sits.
 
-    Attributes: ``layers`` (name → mobject, inside out, which is also a good build
-    order) and ``outline`` (an invisible circle at the outer radius). Use
-    ``radius(name)`` and ``point_at(r, phi)`` for positions; both follow the slice
-    when it is moved or scaled.
+    Attributes
+    ----------
+    layers : dict
+        Layer name → mobject, inside out (also a good build order).
+    outline : Circle
+        An invisible circle at the outer radius. ``radius(name)`` and
+        ``point_at(r, phi)`` use it, so positions follow the slice when it is
+        moved or scaled.
     """
 
     def __init__(
@@ -358,7 +362,8 @@ def signature(
             "tau3": (3, 0.05, 0.16),
         }[kind]
         for i in range(n):
-            q = charge if n == 1 else (1 if i % 2 == 0 else -1)
+            # prongs alternate in charge: tau prongs sum to the tau's charge, a jet to 0
+            q = (1 if i % 2 == 0 else -1) if kind == "jet" else (charge if i % 2 == 0 else -charge)
             angle = phi + (rng.uniform(-spread, spread) if spread else 0.0)
             tracks.add(polyline(charged(pt or float(rng.uniform(1.5, 5.0)), q, angle, ecal_in)))
         deposits.add(_deposit(detector, "ecal", phi, width * 0.6, 0.5, color))

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import tomllib
 import warnings
 from dataclasses import dataclass, field
@@ -59,6 +60,10 @@ def find_settings(start: Path | str | None = None) -> Path | None:
     return None
 
 
+def _is_number(value) -> bool:
+    return isinstance(value, int | float) and not isinstance(value, bool) and math.isfinite(value)
+
+
 def _choice(section: dict, key: str, allowed: tuple[str, ...], default: str) -> str:
     value = section.get(key, default)
     if value not in allowed:
@@ -86,6 +91,9 @@ def load_settings(path: Path | str | None = None, *, search_from: Path | str | N
             if key not in _KNOWN[section]:
                 warnings.warn(f"{path}: unknown key {section}.{key} ignored", stacklevel=2)
 
+    for section in _KNOWN:
+        if not isinstance(data.get(section, {}), dict):
+            raise ValueError(f"{SETTINGS_FILE}: [{section}] must be a table of settings")
     paths, style, agent = data.get("paths", {}), data.get("style", {}), data.get("agent", {})
     root = paths.get("root", ".")
     if not isinstance(root, str) or not root:
@@ -97,12 +105,18 @@ def load_settings(path: Path | str | None = None, *, search_from: Path | str | N
             f"use one of: {', '.join(PRESETS)}"
         )
     title_band = style.get("title_band", 2.7)
-    if not isinstance(title_band, int | float) or isinstance(title_band, bool):
+    if not _is_number(title_band):
         raise ValueError(f"{SETTINGS_FILE}: style.title_band must be a number (4.0 disables it)")
     keep_out = []
-    for box in style.get("keep_out", []):
-        if len(box) != 4 or not all(isinstance(v, int | float) for v in box):
-            raise ValueError(f"{SETTINGS_FILE}: each keep_out entry is [x0, y0, x1, y1]")
+    boxes = style.get("keep_out", [])
+    if not isinstance(boxes, list):
+        raise ValueError(f"{SETTINGS_FILE}: keep_out is a list of [x0, y0, x1, y1] boxes")
+    for box in boxes:
+        if not isinstance(box, list) or len(box) != 4 or not all(_is_number(v) for v in box):
+            raise ValueError(
+                f"{SETTINGS_FILE}: each keep_out entry is [x0, y0, x1, y1], e.g. "
+                "keep_out = [[-7.1, 0.2, -5.85, 4.0]]"
+            )
         x0, y0, x1, y1 = (float(v) for v in box)
         keep_out.append((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)))
 

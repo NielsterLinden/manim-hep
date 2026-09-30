@@ -120,3 +120,29 @@ def test_default_path_is_the_scenes_folder(awkward_dir: Path, capsys, monkeypatc
     assert main(["lint"]) == 1
     out = capsys.readouterr().out
     assert "a.py:1: MH001" in out and "elsewhere" not in out
+
+
+def test_folders_named_like_skipped_ones_above_the_target_do_not_hide_files(tmp_path, capsys):
+    project = tmp_path / "media" / "talk"  # e.g. a project inside a folder called media
+    project.mkdir(parents=True)
+    (project / "a.py").write_text("x = RED\n", encoding="utf-8")
+    assert main(["lint", str(project)]) == 1
+    assert "1 file(s)" in capsys.readouterr().out
+
+
+def test_encodings_python_accepts_are_accepted(tmp_path, capsys):
+    bom = tmp_path / "bom.py"
+    bom.write_bytes(b"\xef\xbb\xbf" + b"x = 1\n")
+    assert main(["lint", str(bom)]) == 0
+    latin = tmp_path / "latin.py"
+    latin.write_bytes(b"# -*- coding: latin-1 -*-\nname = '\xe9'\n")
+    assert main(["lint", str(latin)]) == 0
+    broken = tmp_path / "cp1252.py"
+    broken.write_bytes(b"name = '\xe9'\n")  # not UTF-8 and no coding line: Python rejects it
+    assert main(["lint", str(broken)]) == 1
+    assert "MH000" in capsys.readouterr().out
+
+
+def test_only_self_embed_is_manimgl():
+    assert codes("model.embed(x)") == []
+    assert "MH003" in codes("self.embed()")

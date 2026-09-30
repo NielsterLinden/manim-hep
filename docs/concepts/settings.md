@@ -53,7 +53,8 @@ commit    = "ask"         # never | ask | auto   (pushing is never automatic)
 - **`current`**: work on the checked-out branch.
 - **`feature`**: `anim/<slug>`, created from the current branch; merging is up to you.
 - **`worktree`**: a git worktree for `anim/<slug>` under `.manim-hep/worktrees/`, so
-  several agents can build clips in parallel.
+  several agents can build clips in parallel. `manim-hep render --final` delivers clips to
+  the main checkout's `clips/`, so removing the worktree never deletes a delivered clip.
 
 **`commit`**
 - **`never`**: leave everything uncommitted.

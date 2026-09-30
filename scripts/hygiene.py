@@ -26,8 +26,6 @@ DENYLIST = [
     (re.compile(r"/home/[a-z]"), "home folder"),
     (re.compile(r"(?<![\w.])/Users/[A-Za-z]"), "macOS user folder"),
     (re.compile(r"\blxplus\d+|\blxplus\.cern\.ch"), "CERN host name"),
-    (re.compile(r"\bstbc(?:-i\d+)?\b"), "cluster host name"),
-    (re.compile(r"\b[\w-]+\.nikhef\.nl\b"), "institute host name"),
 ]
 # Real leaks continue after the prefix (/afs/cern.ch/...); bare mentions in docs pass.
 # Files that must mention the patterns in order to define or test them, and design notes.

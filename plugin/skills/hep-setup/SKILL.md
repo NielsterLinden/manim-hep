@@ -36,6 +36,9 @@ If you can read it, follow it. The summary below is the same procedure.
 - Then set the four `[agent]` values in `manim-hep.toml` from the answers.
 - **Gate 1:** `init` exits 0. If it wrote a `<file>.manim-hep.new`, show the user both
   versions and merge by hand. Never overwrite their file.
+- **Upgrades.** After upgrading manim-hep, `init --agent codex` writes `.new` files for
+  the skills that changed. `manim-hep init --agent codex --update-skills` replaces the
+  copied `hep-*` skills instead (the user's edits to those copies are lost, so ask first).
 - **Gate 2:** grep the new files for unfilled placeholders (`<...>` in capitals). There must
   be none.
 

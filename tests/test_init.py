@@ -160,3 +160,36 @@ def test_bad_arguments(awkward_dir: Path, bad):
 
 def test_skills_are_found():
     assert (skills_dir() / "hep-animate" / "SKILL.md").is_file()
+
+
+def test_the_settings_root_wins_and_a_different_root_is_refused(awkward_dir: Path, capsys):
+    assert init(awkward_dir, "--root", "presentation") == 0
+    assert init(awkward_dir, "--agent", "codex") == 0  # no --root: the file's root is used
+    assert not (awkward_dir / "scenes").exists()
+    assert "render presentation/scenes/smoke_test.py" in capsys.readouterr().out
+    assert init(awkward_dir, "--root", "talk") == 2
+    assert "already sets root = 'presentation'" in capsys.readouterr().out
+
+
+def test_non_utf8_files_get_a_new_file_instead_of_a_crash(awkward_dir: Path):
+    (awkward_dir / ".gitignore").write_bytes("*.root\n".encode("utf-16"))  # PowerShell 5.1
+    assert init(awkward_dir) == 1
+    assert (awkward_dir / ".gitignore.manim-hep.new").is_file()
+    assert (awkward_dir / "AGENTS.md").is_file()  # the rest still happened
+
+
+def test_skills_checked_out_with_crlf_count_as_unchanged(awkward_dir: Path):
+    assert init(awkward_dir, "--agent", "codex") == 0
+    skill = awkward_dir / ".agents" / "skills" / "hep-animate" / "SKILL.md"
+    lf = skill.read_bytes().replace(b"\r\n", b"\n")
+    skill.write_bytes(lf.replace(b"\n", b"\r\n"))  # as git checks it out with autocrlf
+    assert init(awkward_dir, "--agent", "codex") == 0
+    assert not skill.with_name("SKILL.md.manim-hep.new").exists()
+
+
+def test_update_skills_replaces_the_copies(awkward_dir: Path):
+    init(awkward_dir, "--agent", "codex")
+    skill = awkward_dir / ".agents" / "skills" / "hep-physics" / "SKILL.md"
+    skill.write_text("old version\n", encoding="utf-8")
+    assert init(awkward_dir, "--agent", "codex", "--update-skills") == 0
+    assert skill.read_text(encoding="utf-8").startswith("---")

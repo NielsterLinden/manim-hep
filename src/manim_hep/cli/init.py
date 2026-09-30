@@ -59,6 +59,15 @@ def _read(path: Path) -> str:
         return fh.read()
 
 
+def _read_or_conflict(path: Path, ours: str, report: Report) -> str | None:
+    """The file's text, or None after writing ``ours`` to a .new file (not UTF-8)."""
+    try:
+        return _read(path)
+    except UnicodeDecodeError:
+        _conflict(path, ours, report)
+        return None
+
+
 def _write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8", newline="") as fh:
@@ -90,7 +99,10 @@ def merge_block(path: Path, markers: tuple[str, str], body: str, report: Report)
         _write(path, "\n".join([start, *body.splitlines(), end]) + "\n")
         report.add("created", path)
         return
-    text = _read(path)
+    whole = "\n".join([start, *body.splitlines(), end]) + "\n"
+    text = _read_or_conflict(path, whole, report)
+    if text is None:
+        return
     nl = _newline(text)
     block = nl.join([start, *body.splitlines(), end])
     i, j = text.find(start), text.find(end)
@@ -105,7 +117,6 @@ def merge_block(path: Path, markers: tuple[str, str], body: str, report: Report)
     elif i != -1 and j > i and text.count(start) == 1 and text.count(end) == 1:
         new = text[:i] + block + text[j + len(end) :]
     else:
-        whole = "\n".join([start, *body.splitlines(), end]) + "\n"
         _conflict(path, whole, report)
         return
     if new == text:
@@ -120,7 +131,9 @@ def ensure_line(path: Path, line: str, report: Report) -> None:
         _write(path, line + "\n")
         report.add("created", path)
         return
-    text = _read(path)
+    text = _read_or_conflict(path, line + "\n", report)
+    if text is None:
+        return
     if any(existing.strip() == line for existing in text.splitlines()):
         report.add("unchanged", path)
         return
@@ -139,7 +152,9 @@ def merge_settings_json(path: Path, report: Report) -> None:
         _write(path, json.dumps(wanted, indent=2) + "\n")
         report.add("created", path)
         return
-    text = _read(path)
+    text = _read_or_conflict(path, json.dumps(wanted, indent=2) + "\n", report)
+    if text is None:
+        return
     try:
         data = json.loads(text) if text.strip() else {}
     except json.JSONDecodeError:
@@ -164,7 +179,12 @@ def merge_settings_json(path: Path, report: Report) -> None:
     report.add("updated", path)
 
 
-def copy_skills(target: Path, report: Report) -> None:
+def _same_text(a: bytes, b: bytes) -> bool:
+    """Equal apart from line endings (git may check files out with CRLF)."""
+    return a.replace(b"\r\n", b"\n") == b.replace(b"\r\n", b"\n")
+
+
+def copy_skills(target: Path, report: Report, update: bool = False) -> None:
     source = skills_dir()
     for skill in sorted(p for p in source.iterdir() if p.name.startswith("hep-") and p.is_dir()):
         for file in sorted(
@@ -175,8 +195,11 @@ def copy_skills(target: Path, report: Report) -> None:
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(file, dest)
                 report.add("created", dest)
-            elif dest.read_bytes() == file.read_bytes():
+            elif _same_text(dest.read_bytes(), file.read_bytes()):
                 report.add("unchanged", dest)
+            elif update:
+                shutil.copyfile(file, dest)
+                report.add("updated", dest)
             else:
                 _conflict(dest, file.read_text(encoding="utf-8"), report)
 
@@ -209,14 +232,27 @@ def run(args: argparse.Namespace) -> int:
     if args.experiment not in PRESETS:
         print(f"error: --experiment must be one of: {', '.join(PRESETS)}")
         return 2
-    root = Path(args.root)
+    settings = repo / "manim-hep.toml"
+    root = Path(args.root or ".")
+    if settings.exists():
+        try:
+            existing = load_settings(settings)
+        except ValueError as err:
+            print(f"error: {err}")
+            return 2
+        if args.root is not None and root.as_posix() != Path(existing.root).as_posix():
+            print(
+                f"error: manim-hep.toml already sets root = {existing.root!r}; "
+                "change it there, or run init without --root"
+            )
+            return 2
+        root = Path(existing.root)
     if root.is_absolute() or ".." in root.parts:
         print("error: --root must be a folder inside the repository, e.g. presentation")
         return 2
     report = Report()
     toml = (TEMPLATES / "manim-hep.toml").read_text(encoding="utf-8")
     toml = toml.replace("{root}", root.as_posix()).replace("{experiment}", args.experiment)
-    settings = repo / "manim-hep.toml"
     _create_or_keep(settings, toml, report)
     merge_block(repo / "AGENTS.md", MD_MARKERS, agents_block(), report)
     gitignore = (TEMPLATES / "gitignore.txt").read_text(encoding="utf-8")
@@ -226,7 +262,7 @@ def run(args: argparse.Namespace) -> int:
         ensure_line(repo / "CLAUDE.md", "@AGENTS.md", report)
         merge_settings_json(repo / ".claude" / "settings.json", report)
     if args.agent in ("codex", "both"):
-        copy_skills(repo / ".agents" / "skills", report)
+        copy_skills(repo / ".agents" / "skills", report, update=args.update_skills)
     base = repo / root
     _create_or_keep(
         base / "scenes" / "smoke_test.py",
@@ -267,11 +303,18 @@ def add_parser(sub) -> None:
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument("--root", default=".", help="folder for scenes/, storylines/, data/, clips/")
+    p.add_argument(
+        "--root", default=None, help="folder for scenes/, storylines/, data/, clips/ (default .)"
+    )
     p.add_argument("--agent", choices=["claude", "codex", "both", "none"], default="none")
     p.add_argument(
         "--experiment", default="generic", help="generic, atlas, cms, cms-opendata or lhcb"
     )
     p.add_argument("--dir", default=".", help="the repository (default: here)")
+    p.add_argument(
+        "--update-skills",
+        action="store_true",
+        help="replace the copied hep-* skills with this version's (your edits to them are lost)",
+    )
     p.add_argument("--verbose", action="store_true", help="also list unchanged files")
     p.set_defaults(func=run)

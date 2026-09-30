@@ -7,7 +7,7 @@ name = "manim-hep"
 dynamic = ["version"]
 description = "High-energy-physics building blocks, agent skills and a gallery for Manim Community Edition"
 readme = "README.md"
-license = "MIT"
+license = "MIT AND Bitstream-Vera"
 license-files = ["LICENSE", "src/manim_hep/fonts/LICENSE_DEJAVU"]
 authors = [{ name = "Niels ter Linden" }]
 requires-python = ">=3.11"

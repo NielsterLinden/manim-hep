@@ -24,7 +24,8 @@ description: Turn analysis results into animated HEP plots with manim-hep. Freez
   - the time and the producing script;
   - the git commit and dirty flag of the analysis repository. Freeze from a clean checkout
     when you can.
-- **The drift guard.** Re-run the extractor after delivery and diff the JSON. If it
+- **The drift guard.** Re-run the extractor after delivery and compare the `values`
+  block. The provenance time always changes, so do not diff the whole file. If the values
   changed, the clip is out of date.
 - **Hand-written freezes are for literature constants only**, each with its own `source`
   (PDG year, DOI).

@@ -71,3 +71,12 @@ def test_place_point_and_scaled_placement():
     assert c.width == pytest.approx(1.0)
     with pytest.raises(ValueError, match="2D or 3D point"):
         place(Square(), (1, 2, 3, 4))
+
+
+def test_check_order_ignores_empty_groups_and_trackers_on_both_sides():
+    from manim import VGroup
+
+    scene = Scene()
+    state = {"sq": Square(), "slot": VGroup(), "t": ValueTracker(0)}
+    add_state(scene, state)
+    check_order(scene, state)

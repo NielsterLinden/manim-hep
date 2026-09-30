@@ -7,8 +7,7 @@ description: Write or edit Manim Community Edition scene code for HEP talks on t
 
 - **API:** [api.md](api.md) (exact signatures).
 - **Traps:** [traps.md](traps.md). Read it before debugging anything odd.
-- **Examples:** the manim-hep gallery (`gallery/<category>/<slug>/scene.py`). Start from the
-  closest one.
+- **Examples:** the manim-hep gallery (https://github.com/NielsterLinden/manim-hep/tree/main/gallery). Start from the closest one.
 
 ## File skeleton
 

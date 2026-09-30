@@ -116,3 +116,20 @@ def test_signature_markers_scale_with_the_detector():
     hit_small = signature("muon", small, phi=1.0).hits[0]
     hit_big = signature("muon", big, phi=1.0).hits[0]
     assert hit_small.width == pytest.approx(hit_big.width / 2, rel=1e-3)
+
+
+def _net_charge(sig, field_sign=1):
+    """Charge from each track's bending: with B out of the screen, + bends clockwise."""
+    total = 0
+    for trk in sig.tracks:
+        pts = trk.get_anchors()
+        d, e = pts[1] - pts[0], pts[-1] - pts[0]
+        turn = d[0] * e[1] - d[1] * e[0]  # > 0: anticlockwise
+        total += -field_sign * int(np.sign(turn))
+    return total
+
+
+@pytest.mark.parametrize("charge", [-1, 1])
+def test_tau_prongs_add_up_to_the_tau_charge(det, charge):
+    assert _net_charge(signature("tau3", det, phi=0.4, charge=charge)) == charge
+    assert _net_charge(signature("tau1", det, phi=0.4, charge=charge)) == charge

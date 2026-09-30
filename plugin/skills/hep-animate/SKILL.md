@@ -114,5 +114,5 @@ inspected, what you could not do, and the next step.
   only you can ask the user questions and publish artifacts. Critics only read; builders fix.
 - **Codex and other agents.** There are no subagents: do the steps yourself, in order.
   Storylines are markdown.
-- **Examples.** The manim-hep gallery (`gallery/` in the manim-hep repository) has a worked
-  example for most topics. Start from the closest one.
+- **Examples.** The manim-hep gallery (https://github.com/NielsterLinden/manim-hep/tree/main/gallery) has a worked example for most
+  topics. Start from the closest one.
