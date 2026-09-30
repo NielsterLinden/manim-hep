@@ -86,6 +86,10 @@ ignore = ["RUF001", "RUF002", "RUF003"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-ra"
+filterwarnings = [
+  # a Manim dependency (pydub) imports the deprecated audioop module
+  "ignore:'audioop' is deprecated:DeprecationWarning",
+]
 markers = [
   "render: runs Manim to render video (slow)",
   "latex: needs a LaTeX installation (skipped when `latex` is not on PATH)",
