@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "manim-hep"
+dynamic = ["version"]
+description = "High-energy-physics building blocks, agent skills and a gallery for Manim Community Edition"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "src/manim_hep/fonts/LICENSE_DEJAVU"]
+authors = [{ name = "Niels ter Linden" }]
+requires-python = ">=3.11"
+dependencies = ["manim>=0.21,<0.22"]
+keywords = [
+  "manim",
+  "animation",
+  "high-energy physics",
+  "particle physics",
+  "HEP",
+  "physics education",
+  "agent skills",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
+
+[project.optional-dependencies]
+mplhep = ["mplhep>=1.0"]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "mplhep>=1.0",
+  "mkdocs-material>=9.5",
+  "mkdocstrings[python]>=0.26",
+]
+
+[project.urls]
+Homepage = "https://github.com/NielsterLinden/manim-hep"
+Documentation = "https://nielsterlinden.github.io/manim-hep/"
+Issues = "https://github.com/NielsterLinden/manim-hep/issues"
+Source = "https://github.com/NielsterLinden/manim-hep"
+
+[project.scripts]
+manim-hep = "manim_hep.cli:main"
+
+[project.entry-points."manim.plugins"]
+manim_hep = "manim_hep"
+
+[tool.hatch.version]
+path = "src/manim_hep/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/manim_hep"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/manim_hep",
+  "plugin",
+  "tests",
+  "README.md",
+  "LICENSE",
+  "CREDITS.md",
+  "CHANGELOG.md",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+# Physics text legitimately uses characters such as −, √, μ and ℓ.
+ignore = ["RUF001", "RUF002", "RUF003"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "render: runs Manim to render video (slow)",
+  "latex: needs a LaTeX installation (skipped when `latex` is not on PATH)",
+]

@@ -1,0 +1,7 @@
+# Normalise text files to LF in the repository; binaries stay untouched.
+* text=auto eol=lf
+*.ttf binary
+*.otf binary
+*.png binary
+*.jpg binary
+*.svg text
