@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Manim output and manim-hep working files
+media/
+.manim-hep/
+clips/
+*.mp4
+*.mov
+*.gif
+
+# Docs build
+site/
+
+# Local agent settings
+.claude/settings.local.json
+.claude/worktrees/
