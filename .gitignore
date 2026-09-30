@@ -25,3 +25,6 @@ site/
 # Local agent settings
 .claude/settings.local.json
 .claude/worktrees/
+
+# Docs: generated gallery pages and CI previews
+docs/gallery/

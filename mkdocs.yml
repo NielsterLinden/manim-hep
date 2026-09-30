@@ -1,0 +1,65 @@
+site_name: Agentic Manim for HEP
+site_description: HEP building blocks, agent skills and a gallery for Manim Community Edition
+site_url: https://nielsterlinden.github.io/manim-hep/
+repo_url: https://github.com/NielsterLinden/manim-hep
+repo_name: NielsterLinden/manim-hep
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      toggle: { icon: material/brightness-7, name: Dark mode }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      toggle: { icon: material/brightness-4, name: Light mode }
+
+exclude_docs: |
+  superpowers/
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            show_source: false
+            show_root_heading: true
+            members_order: source
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+
+nav:
+  - Home: index.md
+  - Install:
+      - Quick install (with an agent): install/AGENT_INSTALL.md
+      - Install by hand: install/HUMAN_GUIDE.md
+  - Concepts:
+      - Workflow: concepts/workflow.md
+      - Settings: concepts/settings.md
+      - Storylines: concepts/storylines.md
+      - Verification: concepts/verification.md
+      - Experiments and labels: concepts/experiments.md
+      - Colour: concepts/colour.md
+  - Gallery: gallery/index.md
+  - API reference: api.md
+  - Port backlog: port-backlog.md
+  - Credits: credits.md

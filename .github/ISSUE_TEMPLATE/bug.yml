@@ -1,0 +1,27 @@
+name: Bug
+description: Something in manim-hep does not work
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal scene or command to reproduce
+      render: python
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `manim-hep doctor`
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, macOS, Linux, lxplus, other cluster]

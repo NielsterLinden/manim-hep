@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: >-
+  If you use manim-hep, please cite it as below. Please also cite Manim, on which it is
+  built (https://github.com/ManimCommunity/manim).
+title: "manim-hep: Agentic Manim for HEP"
+abstract: >-
+  High-energy-physics building blocks, agent skills and a gallery for making physics
+  animations with Manim Community Edition.
+type: software
+authors:
+  - given-names: Niels
+    family-names: ter Linden
+repository-code: "https://github.com/NielsterLinden/manim-hep"
+url: "https://github.com/NielsterLinden/manim-hep"
+license: MIT
+version: 0.1.0
+keywords:
+  - manim
+  - animation
+  - high-energy physics
+  - particle physics
+  - physics education
+references:
+  - type: software
+    title: "Manim: Mathematical Animation Framework"
+    authors:
+      - name: The Manim Community Developers
+    url: "https://www.manim.community"
+    repository-code: "https://github.com/ManimCommunity/manim"

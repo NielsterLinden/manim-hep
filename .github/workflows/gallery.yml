@@ -1,0 +1,48 @@
+name: Gallery
+
+on:
+  pull_request:
+    paths: ["gallery/**", "src/**", "scripts/gallery_tool.py", ".github/workflows/gallery.yml"]
+  push:
+    branches: [main]
+    paths: ["gallery/**", "src/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: System libraries and TeX Live
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev libpango1.0-dev pkg-config \
+            texlive texlive-latex-extra dvisvgm
+      - run: python -m pip install -e ".[dev]"
+      - name: Examples to check
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "SINCE=--since origin/${{ github.base_ref }}" >> "$GITHUB_ENV"
+          fi
+          python scripts/gallery_tool.py list $SINCE
+      - name: Lint and contract
+        run: |
+          manim-hep lint gallery/
+          python -m pytest tests/test_gallery.py -m "not render" -q
+      - name: Render (low quality)
+        run: python scripts/gallery_tool.py render $SINCE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: gallery-previews
+          path: |
+            .manim-hep/work/*/*.mp4
+            .manim-hep/work/*/*_last.png
+          if-no-files-found: ignore

@@ -1,0 +1,34 @@
+name: Animation request
+description: Suggest an animation the gallery should have
+labels: ["animation request"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What should the animation show?
+      description: The one idea the audience should take away, in a sentence or two.
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options: [theory, methods, experiments, plots, ml, not sure]
+    validations:
+      required: true
+  - type: textarea
+    id: physics
+    attributes:
+      label: Physics and sources
+      description: Formulas, numbers and where they come from (DOI, arXiv, PDG).
+  - type: textarea
+    id: pieces
+    attributes:
+      label: Building blocks
+      description: Which manim-hep pieces it would use, or what is missing.
+  - type: checkboxes
+    id: willing
+    attributes:
+      label: Contribution
+      options:
+        - label: I would like to build this myself (see CONTRIBUTING.md)

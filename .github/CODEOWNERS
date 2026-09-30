@@ -1,0 +1,13 @@
+# Default owner. The aim is one code owner per experiment; see CONTRIBUTING.md.
+*                                   @NielsterLinden
+
+# Experiment presets and experiment-specific examples need that experiment's owner.
+/src/manim_hep/_presets.py          @NielsterLinden
+/src/manim_hep/experiments.py       @NielsterLinden
+/gallery/experiments/atlas/         @NielsterLinden
+/gallery/experiments/cms/           @NielsterLinden
+/gallery/experiments/lhcb/          @NielsterLinden
+/gallery/experiments/km3net/        @NielsterLinden
+/gallery/plots/atlas/               @NielsterLinden
+/gallery/plots/cms/                 @NielsterLinden
+/gallery/plots/lhcb/                @NielsterLinden

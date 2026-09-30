@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Manim Community (questions about Manim itself)
+    url: https://www.manim.community/discord/
+    about: For Manim questions not specific to manim-hep.

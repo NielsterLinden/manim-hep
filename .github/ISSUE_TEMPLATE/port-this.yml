@@ -1,0 +1,26 @@
+name: Port this
+description: An animation that exists somewhere and should become a gallery example
+labels: ["port"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What the animation shows
+    validations:
+      required: true
+  - type: input
+    id: folder
+    attributes:
+      label: Target folder
+      placeholder: gallery/methods/tag-and-probe
+    validations:
+      required: true
+  - type: textarea
+    id: pieces
+    attributes:
+      label: Core pieces it needs
+      description: e.g. DataAxes, stack_hist, BarrelSlice, signature, FeynmanDiagram; or new ones.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Physics notes and sources
