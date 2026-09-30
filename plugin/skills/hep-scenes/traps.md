@@ -52,3 +52,12 @@ still apply to 0.21 as far as we know.
     `preview.sty` and `dvisvgm`; `manim-hep doctor` checks them.
 21. **Windows: the first `Text` of every render takes a few seconds.** ManimPango loads the
     bundled fonts once per process. That is expected; later texts are fast.
+22. **Small `Text` gets uneven letter spacing.** Pango hints glyphs badly at small sizes,
+    worst in serif fonts. manim-hep's labels, ticks and titles render at size 48 and scale
+    down. Do the same in scenes: `Text("...", font_size=48).scale(0.4)`.
+23. **The experiment fonts have no Greek.** TeX Gyre Heros and Termes (the ATLAS, CMS and
+    LHCb themes) lack Greek letters, so Pango falls back to another font. In `Text` and axis
+    titles, use the micro sign `µ` (U+00B5) for "mu", or pass a `MathTex` title.
+24. **`AnimationGroup(..., group=parent)` keeps `check_order` happy only if every child
+    animates a member of `parent`'s family.** A temporary `VGroup` built around some parts
+    ends up in the scene as a stray object.

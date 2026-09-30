@@ -31,7 +31,7 @@ from manim import (
 )
 
 from manim_hep._presets import PRESETS, Preset, get_preset
-from manim_hep.style import _resolve_font, current_theme
+from manim_hep.style import _resolve_font, _sized_text, current_theme
 
 __all__ = ["PRESETS", "label", "logo"]
 
@@ -157,7 +157,7 @@ def label(
     ink = current_theme().palette.ink
 
     def text(markup: str, scale: float) -> MarkupText:
-        return MarkupText(markup, font=font, font_size=font_size * scale, color=ink)
+        return _sized_text(MarkupText, markup, font_size * scale, font=font, color=ink)
 
     main_markup = _styled(preset.display, preset.exp_style)
     plain = [preset.display]

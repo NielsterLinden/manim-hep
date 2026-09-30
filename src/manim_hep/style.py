@@ -75,6 +75,22 @@ class Theme:
         return np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.0])
 
 
+_TEXT_RENDER_SIZE = 48.0
+
+
+def _sized_text(cls, content: str, font_size: float, **kwargs):
+    """``Text``/``MarkupText`` at ``font_size`` with even letter spacing.
+
+    Pango spaces glyphs unevenly at small sizes, so small text is rendered at size 48
+    and scaled down.
+    """
+    size = max(float(font_size), _TEXT_RENDER_SIZE)
+    mob = cls(content, font_size=size, **kwargs)
+    if size != font_size:
+        mob.scale(font_size / size)
+    return mob
+
+
 def _load_and_unlist_on_windows() -> None:
     """Work around a slow path in ManimPango on Windows.
 

@@ -38,7 +38,7 @@ from manim import (
     VMobject,
 )
 
-from manim_hep.style import current_theme
+from manim_hep.style import _sized_text, current_theme
 
 __all__ = ["DataAxes", "band", "errorbars", "ratio_panel", "stack_hist", "step_hist"]
 
@@ -74,7 +74,7 @@ def _inner_ticks(lo: float, hi: float) -> list[float]:
 
 def _title(text: str | Mobject, font_size: float, color) -> Mobject:
     if isinstance(text, str):
-        return MarkupText(text, font_size=font_size, color=color)
+        return _sized_text(MarkupText, text, font_size, color=color)
     return text
 
 
@@ -169,7 +169,7 @@ class DataAxes(VGroup):
         self.x_labels, self.y_labels = VGroup(), VGroup()
         if show_x_labels:
             for x in self.x_ticks:
-                lab = Text(x_fmt.format(x), font_size=size, color=self.color_)
+                lab = _sized_text(Text, x_fmt.format(x), size, color=self.color_)
                 lab.next_to(self.c2p(x, self.y_min), DOWN, buff=0.14)
                 self.x_labels.add(lab)
         if show_y_labels:
@@ -181,9 +181,9 @@ class DataAxes(VGroup):
                         if abs(exponent - round(exponent)) > 1e-9
                         else f"{round(exponent)}"
                     )
-                    lab = MarkupText(f"10<sup>{text}</sup>", font_size=size, color=self.color_)
+                    lab = _sized_text(MarkupText, f"10<sup>{text}</sup>", size, color=self.color_)
                 else:
-                    lab = Text(y_fmt.format(y), font_size=size, color=self.color_)
+                    lab = _sized_text(Text, y_fmt.format(y), size, color=self.color_)
                 lab.next_to(self.c2p(self.x_min, y), LEFT, buff=0.14)
                 self.y_labels.add(lab)
         self.add(self.x_labels, self.y_labels)
