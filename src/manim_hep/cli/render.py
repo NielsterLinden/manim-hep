@@ -92,12 +92,15 @@ def render_lock(path: Path, timeout: float = 3600.0):
                 fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
-def scene_names(file: Path) -> set[str]:
-    """Classes defined in ``file``, plus names it imports (a scene may live elsewhere)."""
+def scene_names(file: Path) -> set[str] | None:
+    """Classes defined in ``file``, plus names it imports (a scene may live elsewhere).
+
+    None when the file does not parse: Manim then reports the error with its own message.
+    """
     try:
         tree = ast.parse(file.read_bytes())
     except (SyntaxError, ValueError):
-        return set()  # let Manim report the syntax error with its own message
+        return None
     names = {node.name for node in tree.body if isinstance(node, ast.ClassDef)}
     for node in tree.body:
         if isinstance(node, ast.ImportFrom):
@@ -152,7 +155,7 @@ def run(args: argparse.Namespace) -> int:
         print(f"error: {args.file} not found")
         return 2
     available = scene_names(file)
-    if args.scene not in available:
+    if available is not None and args.scene not in available:
         known = ", ".join(sorted(available)) or "none found"
         print(f"error: no scene {args.scene!r} in {file.name} (scenes: {known})")
         return 2

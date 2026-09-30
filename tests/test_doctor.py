@@ -81,6 +81,15 @@ def test_settings_file_is_described(healthy, capsys, tmp_path: Path):
     assert "experiment lhcb" in capsys.readouterr().out
 
 
+def test_fonts_a_theme_registered_already_pass(generic_theme, monkeypatch):
+    import manimpango
+
+    # macOS: registering a font file a second time in one process returns False
+    monkeypatch.setattr(manimpango, "register_font", lambda path: False)
+    check = doctor.check_fonts()
+    assert check.ok, check.detail
+
+
 def test_real_platform_detection_is_one_of_the_known():
     assert doctor.detect_platform() in doctor.LATEX_FIX
 

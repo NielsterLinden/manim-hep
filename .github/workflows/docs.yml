@@ -42,7 +42,8 @@ jobs:
           path: site/
 
   deploy:
-    if: github.event_name != 'pull_request'
+    # a private repository deploys nothing: its Pages site would be public
+    if: github.event_name != 'pull_request' && !github.event.repository.private
     needs: build
     runs-on: ubuntu-latest
     permissions:

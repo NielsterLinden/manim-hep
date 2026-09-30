@@ -113,6 +113,14 @@ def test_imported_scenes_are_accepted(tmp_path: Path):
     assert scene_names(f) == {"Intro", "A"}
 
 
+def test_a_file_that_does_not_parse_is_left_to_manim(tmp_path: Path):
+    from manim_hep.cli.render import scene_names
+
+    f = tmp_path / "s.py"
+    f.write_text("class A(Scene):\n    def construct(self)\n", encoding="utf-8")
+    assert scene_names(f) is None  # not "no such scene": Manim reports the syntax error
+
+
 def test_clips_from_a_worktree_go_to_the_main_checkout(tmp_path: Path):
     import shutil
     import subprocess

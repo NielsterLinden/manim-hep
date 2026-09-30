@@ -149,9 +149,10 @@ def check_fonts() -> Check:
     if len(fonts) < 4:
         return Check("fonts", False, "bundled DejaVu Sans files are missing", "reinstall manim-hep")
     try:
-        import manimpango
+        # the themes' own registration: once per process, as macOS refuses a second one
+        from manim_hep.style import _register
 
-        ok = bool(manimpango.register_font(str(fonts[0])))
+        ok = _register(fonts)
     except Exception as err:  # manimpango failures vary by platform
         return Check("fonts", False, f"cannot register fonts: {err}", MANIM_FIX)
     note = (
