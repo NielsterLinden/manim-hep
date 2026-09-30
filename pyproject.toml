@@ -43,6 +43,7 @@ dev = [
   "mplhep>=1.0",
   "mkdocs-material>=9.5",
   "mkdocstrings[python]>=0.26",
+  "pyyaml>=6",
 ]
 
 [project.urls]
