@@ -1,0 +1,18 @@
+{
+  "name": "manim-hep",
+  "owner": {
+    "name": "Niels ter Linden",
+    "url": "https://github.com/NielsterLinden"
+  },
+  "metadata": {
+    "description": "Agentic Manim for HEP: skills and agents for high-energy-physics animations with Manim Community Edition."
+  },
+  "plugins": [
+    {
+      "name": "manim-hep",
+      "source": "./plugin",
+      "description": "Plan, build, render and check high-energy-physics animations with Manim Community Edition.",
+      "category": "education"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "manim-hep",
+  "displayName": "Agentic Manim for HEP",
+  "version": "0.1.0",
+  "description": "Plan, build, render and check high-energy-physics animations with Manim Community Edition: storylines, scenes on the manim-hep building blocks, render verification, physics checks and experiment styles.",
+  "author": {
+    "name": "Niels ter Linden",
+    "url": "https://github.com/NielsterLinden"
+  },
+  "homepage": "https://github.com/NielsterLinden/manim-hep",
+  "repository": "https://github.com/NielsterLinden/manim-hep",
+  "license": "MIT",
+  "keywords": ["manim", "hep", "particle-physics", "animation", "physics", "feynman-diagrams", "slides"]
+}
