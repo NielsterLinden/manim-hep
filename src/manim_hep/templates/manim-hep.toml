@@ -1,0 +1,16 @@
+# manim-hep settings. Every agent and collaborator reads this file.
+# Reference: https://github.com/NielsterLinden/manim-hep/blob/main/docs/concepts/settings.md
+
+[paths]
+root = "{root}"             # where scenes/, storylines/, data/ and clips/ live
+
+[style]
+experiment = "{experiment}"     # generic | atlas | cms | cms-opendata | lhcb
+# title_band = 2.7          # nothing is drawn above this y (the slide title sits there)
+# keep_out = [[-7.1, 0.2, -5.85, 4.0]]   # more areas to keep clear: [x0, y0, x1, y1]
+
+[agent]
+storyline = "artifact"      # off | markdown | artifact
+verify    = "frames"        # none | render | frames | review
+branch    = "feature"       # current | feature | worktree
+commit    = "ask"           # never | ask | auto   (pushing is never automatic)

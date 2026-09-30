@@ -9,7 +9,7 @@ from manim_hep import __version__
 
 
 def build_parser() -> argparse.ArgumentParser:
-    from manim_hep.cli import doctor, lint, render, seam
+    from manim_hep.cli import doctor, init, lint, render, seam
 
     parser = argparse.ArgumentParser(
         prog="manim-hep",
@@ -17,7 +17,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--version", action="version", version=f"manim-hep {__version__}")
     sub = parser.add_subparsers(dest="command", metavar="COMMAND")
-    for module in (doctor, render, lint, seam):
+    for module in (init, doctor, render, lint, seam):
         module.add_parser(sub)
     return parser
 

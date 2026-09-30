@@ -64,6 +64,11 @@ path = "src/manim_hep/__init__.py"
 [tool.hatch.build.targets.wheel]
 packages = ["src/manim_hep"]
 
+# The skills live in plugin/ (the Claude Code plugin); the wheel carries a copy so that
+# `manim-hep init --agent codex` can install them into a project.
+[tool.hatch.build.targets.wheel.force-include]
+"plugin/skills" = "manim_hep/_skills"
+
 [tool.hatch.build.targets.sdist]
 include = [
   "src/manim_hep",

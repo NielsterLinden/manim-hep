@@ -1,0 +1,12 @@
+# >>> manim-hep
+media/
+.manim-hep/
+__pycache__/
+*.pyc
+clips/
+*.mp4
+*.mov
+*.gif
+.claude/settings.local.json
+.claude/worktrees/
+# <<< manim-hep
