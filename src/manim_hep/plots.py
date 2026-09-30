@@ -69,7 +69,7 @@ def _nice_ticks(lo: float, hi: float, target: int = 6) -> list[float]:
 
 def _inner_ticks(lo: float, hi: float) -> list[float]:
     """Nice ticks strictly inside (lo, hi), so stacked panels never share a label."""
-    return [t for t in _nice_ticks(lo, hi, target=5) if lo < t < hi]
+    return [t for t in _nice_ticks(lo, hi, target=3) if lo < t < hi]
 
 
 def _title(text: str | Mobject, font_size: float, color) -> Mobject:
