@@ -329,18 +329,22 @@ def signature(
         for station in detector.layers["muon"]:
             r = (station.inner_radius + station.outer_radius) / 2 * detector.scale_factor
             hit = min(points, key=lambda p: abs(np.linalg.norm(p - ip) - r))
-            box = Rectangle(width=0.1, height=0.1, fill_color=color, fill_opacity=1, stroke_width=0)
+            size = 0.1 * detector.scale_factor
+            box = Rectangle(
+                width=size, height=size, fill_color=color, fill_opacity=1, stroke_width=0
+            )
             hits.add(box.move_to(hit).rotate(math.atan2(hit[1] - ip[1], hit[0] - ip[0])))
     elif kind == "neutrino":
         _, muon_out = detector.radius("muon")
         end = detector.point_at(muon_out * 1.12, phi)
         direction = (end - ip) / np.linalg.norm(end - ip)
         normal = np.array([-direction[1], direction[0], 0.0])
-        tracks.add(_dashed([ip, end - direction * 0.18], color))
+        tip = 0.2 * detector.scale_factor
+        tracks.add(_dashed([ip, end - direction * tip * 0.9], color))
         tip = Polygon(
             end,
-            end - direction * 0.2 + normal * 0.08,
-            end - direction * 0.2 - normal * 0.08,
+            end - direction * tip + normal * tip * 0.4,
+            end - direction * tip - normal * tip * 0.4,
             fill_color=color,
             fill_opacity=1.0,
             stroke_width=0,

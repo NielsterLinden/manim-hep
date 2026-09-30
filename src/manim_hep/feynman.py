@@ -187,8 +187,9 @@ class FeynmanDiagram(VGroup):
         order. ``kind`` is one of :data:`EDGE_KINDS`; ``label`` is a LaTeX string
         (rendered with ``MathTex``) or any mobject.
     label_buff
-        Gap between an edge and its label. Labels sit on the side of the edge that
-        faces away from the centre of the diagram.
+        Gap between an edge and its label. Each label sits on the side of its edge
+        with more room, away from the other edges (so legs meeting in a "<" keep
+        their labels outside the wedge); on a tie, above or to the left.
 
     Attributes: ``lines``, ``dots`` and ``labels`` (``VGroup``s, in edge order;
     ``labels`` holds ``None``-free entries only), ``points`` (name → position),
@@ -211,8 +212,8 @@ class FeynmanDiagram(VGroup):
         self.lines, self.dots, self.labels = VGroup(), VGroup(), VGroup()
         self.edge_labels: list[Mobject | None] = []
         self._dot_of: dict[str, Dot] = {}
-        centroid = np.mean(list(self.points_by_name.values()), axis=0)
         degree: dict[str, int] = dict.fromkeys(self.points_by_name, 0)
+        pending: list[tuple[Mobject, np.ndarray, np.ndarray, int]] = []
 
         for edge in edges:
             if len(edge) not in (3, 4):
@@ -234,9 +235,17 @@ class FeynmanDiagram(VGroup):
                 lab = MathTex(text, font_size=label_size) if isinstance(text, str) else text
                 if color is not None and isinstance(text, str):
                     lab.set_color(color)
-                self._place_label(lab, a, b, centroid, label_buff)
+                pending.append((lab, a, b, len(self.edge_list) - 1))
                 self.labels.add(lab)
             self.edge_labels.append(lab)
+
+        for lab, a, b, index in pending:
+            others = [
+                np.linspace(self.points_by_name[s], self.points_by_name[e], 25)
+                for i, (s, e, _) in enumerate(self.edge_list)
+                if i != index
+            ]
+            self._place_label(lab, a, b, np.concatenate(others) if others else None, label_buff)
 
         for name, count in degree.items():
             if count >= 2:  # internal vertex
@@ -246,16 +255,24 @@ class FeynmanDiagram(VGroup):
         self.add(self.lines, self.dots, self.labels)
 
     @staticmethod
-    def _place_label(lab: Mobject, a, b, centroid, buff: float) -> None:
+    def _place_label(lab: Mobject, a, b, others: np.ndarray | None, buff: float) -> None:
+        """Put ``lab`` beside edge a–b, on the side farther from the other edges."""
         _, _, n, _ = _frame(a, b)
         mid = (a + b) / 2
-        side = float(np.dot(n, mid - centroid))
-        if abs(side) < 1e-6:  # edge through the centre: label above (or left of) it
-            side = n[1] if abs(n[1]) > 1e-6 else -n[0]
-        if side < 0:
-            n = -n
-        extent = abs(n[0]) * lab.width / 2 + abs(n[1]) * lab.height / 2
-        lab.move_to(mid + n * (buff + extent))
+
+        def spot(side: np.ndarray) -> np.ndarray:
+            extent = abs(side[0]) * lab.width / 2 + abs(side[1]) * lab.height / 2
+            return mid + side * (buff + extent)
+
+        def room(side: np.ndarray) -> float:
+            if others is None:
+                return 0.0
+            return float(np.min(np.linalg.norm(others - spot(side), axis=1)))
+
+        preferred = n if (n[1] > 1e-6 or (abs(n[1]) <= 1e-6 and n[0] < 0)) else -n
+        other = -preferred
+        side = other if room(other) > room(preferred) + 1e-3 else preferred
+        lab.move_to(spot(side))
 
     def edge(self, start: str, end: str) -> Mobject:
         """The line drawn for the edge between ``start`` and ``end`` (either order)."""

@@ -108,3 +108,11 @@ def test_signature_errors(det):
         signature("graviton", det)
     with pytest.raises(ValueError, match=r"\+1 or -1"):
         signature("muon", det, charge=2)
+
+
+def test_signature_markers_scale_with_the_detector():
+    small = BarrelSlice().scale(0.5)
+    big = BarrelSlice()
+    hit_small = signature("muon", small, phi=1.0).hits[0]
+    hit_big = signature("muon", big, phi=1.0).hits[0]
+    assert hit_small.width == pytest.approx(hit_big.width / 2, rel=1e-3)

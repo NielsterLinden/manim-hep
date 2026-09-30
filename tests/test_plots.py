@@ -49,6 +49,11 @@ def test_default_ticks_are_nice(axes):
     assert len(axes.x_labels) == 7 and len(axes.y_labels) == 6
 
 
+def test_negative_ticks_use_a_true_minus_sign():
+    ax = DataAxes((-2, 2), (-1, 1), x_ticks=[-2, 0, 2], y_ticks=[-1, 1])
+    assert ax.x_labels[0].text == "−2" and ax.y_labels[0].text == "−1"
+
+
 def test_tick_labels_use_the_theme_font(axes):
     assert axes.x_labels[0].font == "DejaVu Sans"
 

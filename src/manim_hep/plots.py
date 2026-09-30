@@ -53,6 +53,11 @@ def _digit_font_size(height: float) -> float:
     return height / _DIGIT_HEIGHT[font]
 
 
+def _minus(text: str) -> str:
+    """Typeset negative numbers with a true minus sign (U+2212), not a hyphen."""
+    return text.replace("-", "−")
+
+
 def _nice_ticks(lo: float, hi: float, target: int = 6) -> list[float]:
     span = hi - lo
     raw = span / max(target - 1, 1)
@@ -169,7 +174,7 @@ class DataAxes(VGroup):
         self.x_labels, self.y_labels = VGroup(), VGroup()
         if show_x_labels:
             for x in self.x_ticks:
-                lab = _sized_text(Text, x_fmt.format(x), size, color=self.color_)
+                lab = _sized_text(Text, _minus(x_fmt.format(x)), size, color=self.color_)
                 lab.next_to(self.c2p(x, self.y_min), DOWN, buff=0.14)
                 self.x_labels.add(lab)
         if show_y_labels:
@@ -181,9 +186,11 @@ class DataAxes(VGroup):
                         if abs(exponent - round(exponent)) > 1e-9
                         else f"{round(exponent)}"
                     )
-                    lab = _sized_text(MarkupText, f"10<sup>{text}</sup>", size, color=self.color_)
+                    lab = _sized_text(
+                        MarkupText, f"10<sup>{_minus(text)}</sup>", size, color=self.color_
+                    )
                 else:
-                    lab = _sized_text(Text, y_fmt.format(y), size, color=self.color_)
+                    lab = _sized_text(Text, _minus(y_fmt.format(y)), size, color=self.color_)
                 lab.next_to(self.c2p(self.x_min, y), LEFT, buff=0.14)
                 self.y_labels.add(lab)
         self.add(self.x_labels, self.y_labels)

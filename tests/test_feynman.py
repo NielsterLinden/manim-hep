@@ -97,14 +97,24 @@ def test_errors_are_explained():
         _drell_yan().edge("q", "l+")
 
 
-def test_labels_sit_outside_the_diagram():
+def _side(point, a, b) -> float:
+    """Which side of the line a→b a point lies on (sign of the 2D cross product)."""
+    a, b, point = (np.array([*p, 0][:3], dtype=float) for p in (a, b, point))
+    return float(np.cross(b - a, point - a)[2])
+
+
+def test_labels_stay_out_of_the_wedges():
     d = _drell_yan()
-    centre = np.mean([[*p, 0] for p in V.values()], axis=0)
-    for (start, end, _), lab in zip(d.edge_list, d.edge_labels, strict=True):
-        mid = (np.array([*V[start], 0]) + np.array([*V[end], 0])) / 2
-        if np.linalg.norm(mid - centre) > 1e-6:
-            assert np.linalg.norm(lab.get_center() - centre) > np.linalg.norm(mid - centre)
-    assert d.edge_labels[2].get_center()[1] > 0  # the propagator label goes above it
+    labels = dict(zip([(s, e) for s, e, _ in d.edge_list], d.edge_labels, strict=True))
+    # incoming legs meet at "a" in a "<": each label on the far side from the other leg
+    q_label, qbar_label = labels[("q", "a")], labels[("a", "qbar")]
+    assert _side(q_label.get_center(), V["q"], V["a"]) * _side(V["qbar"], V["q"], V["a"]) < 0
+    assert _side(qbar_label.get_center(), V["a"], V["qbar"]) * _side(V["q"], V["a"], V["qbar"]) < 0
+    # outgoing legs meet at "b" in a ">"
+    lm, lp = labels[("b", "l-")], labels[("l+", "b")]
+    assert _side(lm.get_center(), V["b"], V["l-"]) * _side(V["l+"], V["b"], V["l-"]) < 0
+    assert _side(lp.get_center(), V["l+"], V["b"]) * _side(V["l-"], V["l+"], V["b"]) < 0
+    assert labels[("a", "b")].get_center()[1] > 0  # the propagator label goes above it
 
 
 def test_draw_in_order_keeps_the_diagram_one_group():

@@ -61,3 +61,9 @@ still apply to 0.21 as far as we know.
 24. **`AnimationGroup(..., group=parent)` keeps `check_order` happy only if every child
     animates a member of `parent`'s family.** A temporary `VGroup` built around some parts
     ends up in the scene as a stray object.
+25. **`Create` on a `VGroup` draws the children one after another** (`lag_ratio=1` by
+    default). Pass `lag_ratio=0` to draw them together.
+26. **A faded-out child reappears.** In 0.21, `FadeOut` on a *submobject* of a group calls
+    `interpolate(0)` when it cleans up, so the child becomes visible again. Fade out
+    top-level objects only. Change group members in place (`.animate`,
+    `save_state`/`Restore`) or remove them from the group first.
