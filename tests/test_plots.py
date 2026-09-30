@@ -139,3 +139,4 @@ def test_ratio_panel_lines_up_and_skips_empty_bins():
     assert rp.bins == [0, 2, 3, 4, 5]
     assert math.isnan(rp.ratio[1]) and rp.ratio[3] == pytest.approx(2.0)
     assert len(rp.dots) == len(rp.errs) == 5
+    assert rp.axes.y_ticks == [0.75, 1.0, 1.25]  # no labels on the shared edge

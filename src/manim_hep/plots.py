@@ -67,6 +67,11 @@ def _nice_ticks(lo: float, hi: float, target: int = 6) -> list[float]:
     return ticks
 
 
+def _inner_ticks(lo: float, hi: float) -> list[float]:
+    """Nice ticks strictly inside (lo, hi), so stacked panels never share a label."""
+    return [t for t in _nice_ticks(lo, hi, target=5) if lo < t < hi]
+
+
 def _title(text: str | Mobject, font_size: float, color) -> Mobject:
     if isinstance(text, str):
         return MarkupText(text, font_size=font_size, color=color)
@@ -474,7 +479,7 @@ def ratio_panel(
         x_length=main.frame.width,
         y_length=y_length,
         x_ticks=main.x_ticks,
-        y_ticks=y_ticks if y_ticks is not None else [y_range[0], 1.0, y_range[1]],
+        y_ticks=y_ticks if y_ticks is not None else _inner_ticks(*y_range),
         x_fmt=main.x_fmt,
         x_title=x_title,
         y_title=y_title,
